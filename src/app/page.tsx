@@ -736,6 +736,12 @@ export default function Home() {
         throw new Error(data.message || 'Lỗi khi tải tài liệu');
       }
 
+      // Purge old cached catalog immediately so the new document is read fresh
+      try {
+        localStorage.removeItem(`khdh_catalog_${wsId}`);
+      } catch {}
+      setCatalogData(null);
+
       // Cập nhật danh sách tài liệu trước
       await fetchDocuments(wsId);
 

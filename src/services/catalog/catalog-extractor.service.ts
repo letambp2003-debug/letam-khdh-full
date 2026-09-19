@@ -587,6 +587,10 @@ export class CatalogExtractorService {
   }> {
     const targetProject = req.projectId || 'usr_guest';
 
+    if (req.forceRefresh) {
+      await this.clearCatalog(targetProject);
+    }
+
     // 1. Lấy danh sách tài liệu nguồn sẵn sàng
     let activeDocs = await SourceDocumentService.getActiveReady(targetProject);
     console.log(`[CATALOG] Project=${targetProject}, ActiveDocs=${activeDocs.length}, RequestDocIds=${JSON.stringify(req.documentIds || 'none')}`);
