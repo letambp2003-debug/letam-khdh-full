@@ -14,7 +14,7 @@ const envSchema = z.object({
 
   GOOGLE_CLIENT_ID: z.string().optional().default(''),
   GOOGLE_CLIENT_SECRET: z.string().optional().default(''),
-  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().optional().default(''),
+  NEXT_PUBLIC_GOOGLE_CLIENT_ID: z.string().optional().default('497311553353-sjkaf83820uim4tecedosk1pd512josg.apps.googleusercontent.com'),
 
   NEXT_PUBLIC_APP_NAME: z.string().default('KHDH Auto V10.1'),
   NEXT_PUBLIC_APP_URL: z.string().default('http://localhost:3000'),

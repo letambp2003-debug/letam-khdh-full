@@ -11,12 +11,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(`/?auth_error=${encodeURIComponent(error || 'NO_CODE')}`, url.origin));
   }
 
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '497311553353-sjkaf83820uim4tecedosk1pd512josg.apps.googleusercontent.com';
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-
-  if (!clientId) {
-    return NextResponse.redirect(new URL('/?auth_error=MISSING_CLIENT_ID', url.origin));
-  }
 
   try {
     const redirectUri = `${url.origin}/api/auth/google/callback`;

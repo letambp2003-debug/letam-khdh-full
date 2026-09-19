@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { UserVaultService } from '@/services/auth/user-vault.service';
 
 export async function GET(request: NextRequest) {
-  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-  if (!clientId) {
-    return NextResponse.redirect(new URL('/?auth_error=MISSING_GOOGLE_CLIENT_ID', request.url));
-  }
+  const clientId = process.env.GOOGLE_CLIENT_ID || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '497311553353-sjkaf83820uim4tecedosk1pd512josg.apps.googleusercontent.com';
 
   const url = new URL(request.url);
   const redirectUri = `${url.origin}/api/auth/google/callback`;

@@ -209,7 +209,7 @@ export default function Home() {
 
   // Google Client ID state
   const [googleClientId, setGoogleClientId] = useState<string>(
-    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
+    process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '497311553353-sjkaf83820uim4tecedosk1pd512josg.apps.googleusercontent.com'
   );
   const [showGcpGuideModal, setShowGcpGuideModal] = useState(false);
   const googleBtnContainerRef = useRef<HTMLDivElement | null>(null);
@@ -277,7 +277,7 @@ export default function Home() {
 
   // Initialize Google Identity Services (GIS)
   useEffect(() => {
-    const activeClientId = googleClientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const activeClientId = googleClientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '497311553353-sjkaf83820uim4tecedosk1pd512josg.apps.googleusercontent.com';
     if (!activeClientId) return;
 
     const interval = setInterval(() => {
@@ -1825,7 +1825,7 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => {
-                  const activeClientId = googleClientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+                  const activeClientId = googleClientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '497311553353-sjkaf83820uim4tecedosk1pd512josg.apps.googleusercontent.com';
                   // @ts-ignore
                   if (activeClientId && typeof window !== 'undefined' && window.google?.accounts?.id) {
                     // @ts-ignore
