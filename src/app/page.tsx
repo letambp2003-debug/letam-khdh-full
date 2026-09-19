@@ -134,9 +134,9 @@ export default function Home() {
 
   const [command, setCommand] = useState('SOAN_V11_KHONG_TACH_TIET');
   const [khdhFormatMode, setKhdhFormatMode] = useState<'SPLIT_PERIODS' | 'CONTINUOUS_4SECTION'>('CONTINUOUS_4SECTION');
-  const [selectedSubject, setSelectedSubject] = useState<string>('Lịch sử');
-  const [selectedGrade, setSelectedGrade] = useState<'Lớp 9' | 'Lớp 8' | 'Lớp 7' | 'Lớp 6'>('Lớp 9');
-  const [lessonCode, setLessonCode] = useState('TOAN-9-HKI-SODAISO-C01-STT01');
+  const [selectedSubject, setSelectedSubject] = useState<string>('Toán');
+  const [selectedGrade, setSelectedGrade] = useState<'Lớp 9' | 'Lớp 8' | 'Lớp 7' | 'Lớp 6'>('Lớp 8');
+  const [lessonCode, setLessonCode] = useState('TOAN-8-HKI-C01-STT01');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'draft' | 'preview' | 'catalog' | 'worksheet' | 'game' | 'storyboard' | 'slide' | 'sources' | 'history' | 'stats'>('draft');
   const [taskHistory, setTaskHistory] = useState<TaskHistoryItem[]>([]);
@@ -643,34 +643,34 @@ export default function Home() {
           .toLowerCase();
 
         let detectedSub = selectedSubject;
-        if (/\b(lịch\s*sử|lich\s*su|ls\s*&?\s*đl|sử\s*[6789]|lichsu)\b/i.test(docText)) {
+        if (/(toán|toan|đại\s*số|hình\s*học)/i.test(docText)) {
+          detectedSub = 'Toán';
+        } else if (/(lịch\s*sử|lich\s*su|ls\s*&?\s*đl|sử\s*[6789]|lichsu)/i.test(docText)) {
           detectedSub = 'Lịch sử';
-        } else if (/\b(địa\s*l[íy]|dia\s*li|địa\s*[6789])\b/i.test(docText)) {
+        } else if (/(địa\s*l[íy]|dia\s*li|địa\s*[6789])/i.test(docText)) {
           detectedSub = 'Địa lí';
-        } else if (/\b(ngữ\s*văn|ngu\s*van|văn\s*[6789])\b/i.test(docText)) {
+        } else if (/(ngữ\s*văn|ngu\s*van|văn\s*[6789])/i.test(docText)) {
           detectedSub = 'Ngữ văn';
-        } else if (/\b(khoa\s*học\s*tự\s*nhiên|khtn|vật\s*l[íy]|hóa\s*học|sinh\s*học)\b/i.test(docText)) {
+        } else if (/(khoa\s*học\s*tự\s*nhiên|khtn|vật\s*l[íy]|hóa\s*học|sinh\s*học)/i.test(docText)) {
           detectedSub = 'Khoa học tự nhiên';
-        } else if (/\b(tin\s*học|tin\s*hoc|tin\s*[6789])\b/i.test(docText)) {
+        } else if (/(tin\s*học|tin\s*hoc|tin\s*[6789])/i.test(docText)) {
           detectedSub = 'Tin học';
-        } else if (/\b(tiếng\s*anh|english|tienganh)\b/i.test(docText)) {
+        } else if (/(tiếng\s*anh|english|tienganh)/i.test(docText)) {
           detectedSub = 'Tiếng Anh';
-        } else if (/\b(toán|toan|đại\s*số|hình\s*học)\b/i.test(docText)) {
-          detectedSub = 'Toán học';
         }
         setSelectedSubject(detectedSub);
 
         let detectedG = selectedGrade;
-        if (/\b(lớp\s*9|lop\s*9|k9|khoi\s*9|khối\s*9|-9-|_9_)\b/i.test(docText)) {
-          detectedG = 'Lớp 9';
-          setSelectedGrade('Lớp 9');
-        } else if (/\b(lớp\s*8|lop\s*8|k8|khoi\s*8|khối\s*8|-8-|_8_)\b/i.test(docText)) {
+        if (/(lớp\s*8|lop\s*8|k8|khoi\s*8|khối\s*8|-8-|_8_|toan8|toán8|[_\-\s]8[_\-\.\s])/i.test(docText)) {
           detectedG = 'Lớp 8';
           setSelectedGrade('Lớp 8');
-        } else if (/\b(lớp\s*7|lop\s*7|k7|khoi\s*7|khối\s*7|-7-|_7_)\b/i.test(docText)) {
+        } else if (/(lớp\s*9|lop\s*9|k9|khoi\s*9|khối\s*9|-9-|_9_|toan9|toán9|[_\-\s]9[_\-\.\s])/i.test(docText)) {
+          detectedG = 'Lớp 9';
+          setSelectedGrade('Lớp 9');
+        } else if (/(lớp\s*7|lop\s*7|k7|khoi\s*7|khối\s*7|-7-|_7_|toan7|toán7|[_\-\s]7[_\-\.\s])/i.test(docText)) {
           detectedG = 'Lớp 7';
           setSelectedGrade('Lớp 7');
-        } else if (/\b(lớp\s*6|lop\s*6|k6|khoi\s*6|khối\s*6|-6-|_6_)\b/i.test(docText)) {
+        } else if (/(lớp\s*6|lop\s*6|k6|khoi\s*6|khối\s*6|-6-|_6_|toan6|toán6|[_\-\s]6[_\-\.\s])/i.test(docText)) {
           detectedG = 'Lớp 6';
           setSelectedGrade('Lớp 6');
         }
@@ -941,8 +941,8 @@ export default function Home() {
     overrideGrade?: 'Lớp 9' | 'Lớp 8' | 'Lớp 7' | 'Lớp 6',
     overrideSubject?: string
   ) => {
-    const targetGrade = overrideGrade || selectedGrade;
-    const targetSubject = overrideSubject || selectedSubject || 'Lịch sử';
+    const targetGrade = overrideGrade || selectedGrade || 'Lớp 8';
+    const targetSubject = overrideSubject || selectedSubject || 'Toán';
     setExtractingCatalog(true);
     setError(null);
     try {
@@ -986,8 +986,8 @@ export default function Home() {
     overrideSubject?: string
   ) => {
     const isForce = typeof forceRefresh === 'boolean' ? forceRefresh : false;
-    const targetGrade = overrideGrade || selectedGrade;
-    const targetSubject = overrideSubject || selectedSubject || 'Lịch sử';
+    const targetGrade = overrideGrade || selectedGrade || 'Lớp 8';
+    const targetSubject = overrideSubject || selectedSubject || 'Toán';
     setExtractingCatalog(true);
     setError(null);
     try {

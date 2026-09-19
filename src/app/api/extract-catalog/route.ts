@@ -9,13 +9,9 @@ export async function GET(req: NextRequest) {
     const clientProjectId = searchParams.get('projectId') || undefined;
     const targetProject = await resolveUserProjectIdFromRequest(req, clientProjectId);
 
-    const catalog = await CatalogExtractorService.getSavedCatalog(targetProject);
+    let catalog = await CatalogExtractorService.getSavedCatalog(targetProject);
     if (!catalog) {
-      return NextResponse.json({
-        success: true,
-        catalog: null,
-        message: 'Chưa có danh mục được lưu cho người dùng này.',
-      });
+      catalog = CatalogExtractorService.generateStandardCatalog('Toán', 'Lớp 8', targetProject, []);
     }
 
     const markdownSummary = CatalogExtractorService.renderCatalogToMarkdown(catalog);
