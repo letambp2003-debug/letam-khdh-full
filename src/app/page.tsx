@@ -2622,6 +2622,37 @@ export default function Home() {
                   </button>
                 ))}
               </div>
+
+              {/* Reset & Quick Actions Toolbar */}
+              <div className="flex flex-wrap items-center justify-between gap-1.5 pt-2 border-t border-blue-200/80">
+                <button
+                  type="button"
+                  onClick={() => handleExtractCatalog(true)}
+                  className="px-2.5 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                  title="Xem danh mục bài học & ma trận phân phối chương trình"
+                >
+                  <span>📑</span>
+                  <span>Danh mục bài học</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleTriggerUpload('PL1')}
+                  className="px-2.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                  title="Tải tệp Phụ lục I hoặc PPCT mới"
+                >
+                  <span>📤</span>
+                  <span>Tải tệp mới</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetAllSystemData}
+                  className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
+                  title="Xóa sạch toàn bộ dữ liệu đệm cũ và đặt lại hệ thống"
+                >
+                  <span>🧹</span>
+                  <span>Đặt lại dữ liệu</span>
+                </button>
+              </div>
             </div>
 
             <div>
@@ -5301,10 +5332,98 @@ export default function Home() {
               <button
                 type="button"
                 onClick={() => setShowCatalogModal(false)}
-                className="text-slate-400 hover:text-slate-600 font-bold text-xl leading-none p-1"
+                className="text-slate-400 hover:text-slate-600 font-bold text-xl leading-none p-1 cursor-pointer"
               >
                 ✕
               </button>
+            </div>
+
+            {/* Subject & Grade Tab Switcher inside Modal */}
+            <div className="bg-gradient-to-r from-blue-50/80 via-slate-50 to-indigo-50/80 p-2.5 rounded-xl border border-slate-200 space-y-2 text-xs">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-2">
+                {/* Subject Tabs */}
+                <div className="flex flex-wrap items-center gap-1">
+                  <span className="text-[11px] font-bold text-slate-700 mr-1">Môn học:</span>
+                  {[
+                    { id: 'Toán học', label: '📐 Toán' },
+                    { id: 'Ngữ văn', label: '📖 Văn' },
+                    { id: 'Lịch sử', label: '🏛️ Sử' },
+                    { id: 'Địa lí', label: '🌍 Địa' },
+                    { id: 'Khoa học tự nhiên', label: '🔬 KHTN' },
+                    { id: 'Tin học', label: '💻 Tin' },
+                    { id: 'Tiếng Anh', label: '🇬🇧 Anh' },
+                  ].map((sub) => (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => handleSwitchSubject(sub.id)}
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                        selectedSubject === sub.id
+                          ? 'bg-blue-700 text-white shadow-2xs ring-1 ring-blue-600'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                      }`}
+                    >
+                      {sub.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Grade Tabs */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[11px] font-bold text-slate-700 mr-1">Khối lớp:</span>
+                  {(['Lớp 9', 'Lớp 8', 'Lớp 7', 'Lớp 6'] as const).map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => handleSwitchGrade(g)}
+                      className={`px-2 py-0.5 rounded-md text-[11px] font-bold transition-all cursor-pointer ${
+                        selectedGrade === g
+                          ? 'bg-indigo-700 text-white shadow-2xs ring-1 ring-indigo-600'
+                          : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Action Toolbar inside Modal */}
+              <div className="flex flex-wrap items-center justify-between pt-1.5 border-t border-slate-200/80 text-[11px] gap-1.5">
+                <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => handleExtractCatalogServerSide(true)}
+                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                    title="Bắt buộc trích xuất lại từ tệp tài liệu nguồn vừa tải lên"
+                  >
+                    <span>🔄</span>
+                    <span>Trích xuất lại từ Tệp nguồn</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowCatalogModal(false);
+                      handleTriggerUpload('PL1');
+                    }}
+                    className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg transition-all flex items-center gap-1 shadow-2xs cursor-pointer"
+                    title="Bổ sung hoặc nạp tệp Phụ lục I / PPCT mới"
+                  >
+                    <span>📤</span>
+                    <span>Nạp tệp mới (.docx/.pdf)</span>
+                  </button>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleResetAllSystemData}
+                  className="px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold border border-rose-200 rounded-lg transition-all flex items-center gap-1 cursor-pointer"
+                  title="Xóa toàn bộ dữ liệu nguồn cũ và bộ nhớ đệm để bắt đầu lại"
+                >
+                  <span>🧹</span>
+                  <span>Đặt lại tài liệu &amp; Xóa đệm</span>
+                </button>
+              </div>
             </div>
 
             {/* Search & Filter Bar */}
