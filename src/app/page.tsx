@@ -739,9 +739,8 @@ export default function Home() {
       // Cập nhật danh sách tài liệu trước
       await fetchDocuments(wsId);
 
-      // Tự động trích xuất danh mục - KHÔNG gửi documentIds để server
-      // tự lấy TẤT CẢ tài liệu active/ready của project (tránh race condition)
-      handleExtractCatalogServerSide(true, selectedGrade);
+      // Tự động trích xuất danh mục từ tệp vừa tải lên
+      handleExtractCatalogServerSide(true);
 
     } catch (err: unknown) {
       const msg = (err as Error)?.message || 'Lỗi tải tệp';
@@ -964,8 +963,8 @@ export default function Home() {
     overrideGrade?: 'Lớp 9' | 'Lớp 8' | 'Lớp 7' | 'Lớp 6',
     overrideSubject?: string
   ) => {
-    const targetGrade = overrideGrade || selectedGrade || 'Lớp 8';
-    const targetSubject = overrideSubject || selectedSubject || 'Toán';
+    const targetGrade = overrideGrade || selectedGrade;
+    const targetSubject = overrideSubject || selectedSubject;
     setExtractingCatalog(true);
     setError(null);
     try {
@@ -991,6 +990,12 @@ export default function Home() {
       }
 
       setCatalogData(data.catalog);
+      if (data.catalog?.subject && data.catalog.subject !== 'Tài liệu nguồn' && data.catalog.subject !== 'Chưa xác định') {
+        setSelectedSubject(data.catalog.subject);
+      }
+      if (data.catalog?.grade && ['Lớp 9', 'Lớp 8', 'Lớp 7', 'Lớp 6'].includes(data.catalog.grade)) {
+        setSelectedGrade(data.catalog.grade as 'Lớp 9' | 'Lớp 8' | 'Lớp 7' | 'Lớp 6');
+      }
       try {
         const wsId = getUserWorkspaceId(currentUser);
         localStorage.setItem(`khdh_catalog_${wsId}`, JSON.stringify(data.catalog));

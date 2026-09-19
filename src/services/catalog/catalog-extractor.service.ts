@@ -106,13 +106,14 @@ export class CatalogExtractorService {
    * BỘ QUÉT BẢNG THUẦN DỮ LIỆU NGUỒN (Pure Content Table Parser)
    * Quét trực tiếp 100% tất cả các hàng bài học từ tệp PL1 / PPCT nạp lên mà không áp đặt môn học
    */
-    public static parseLessonsFromSourceTables(docs: SourceDocument[]): {
+  public static parseLessonsFromSourceTables(docs: SourceDocument[]): {
     lessons: CatalogLessonItem[];
     detectedSubject: string;
     detectedGrade: string;
     detectedSchoolYear: string;
   } {
-    const pl1Docs = docs.filter((d) => d.documentType === 'PL1' || d.documentType === 'PPCT' || d.isActive);
+    const activeDocs = docs.filter((d) => d.isActive);
+    const pl1Docs = activeDocs.length > 0 ? activeDocs : docs;
     const lessons: CatalogLessonItem[] = [];
     let currentPpct = 1;
     let detectedSubject = '';
@@ -125,10 +126,12 @@ export class CatalogExtractorService {
     for (const doc of pl1Docs) {
       const text = doc.extractedText || '';
       if (!detectedSubject || detectedSubject === 'Tài liệu nguồn') {
-        detectedSubject = this.extractSubjectFromDocContent(text, doc.displayName);
+        const docSub = this.extractSubjectFromDocContent(text, doc.displayName);
+        if (docSub && docSub !== 'Tài liệu nguồn') detectedSubject = docSub;
       }
       if (!detectedGrade) {
-        detectedGrade = this.extractGradeFromDocContent(text, doc.displayName);
+        const docGrade = this.extractGradeFromDocContent(text, doc.displayName);
+        if (docGrade) detectedGrade = docGrade;
       }
 
       const yearMatch = text.match(/năm\s*học\s*[:–\-\s]?\s*([0-9]{4}\s*[-–]\s*[0-9]{4})/i);
@@ -149,7 +152,7 @@ export class CatalogExtractorService {
           line.toLowerCase().includes('mạch kiến thức')
         ) {
           const cleanLine = line.replace(/^[|#*\s-]+|[|#*\s-]+$/g, '').trim();
-          if (cleanLine.length > 3 && cleanLine.length < 100 && !/^\d+$/.test(cleanLine)) {
+          if (cleanLine.length > 3 && cleanLine.length < 120 && !/^\d+$/.test(cleanLine)) {
             currentChapter = cleanLine;
             currentStrand = cleanLine.split(/[:–\-]/)[0].trim();
           }
@@ -164,18 +167,29 @@ export class CatalogExtractorService {
 
           if (cells.length >= 2) {
             const firstCell = cells[0];
-            const sttMatch = firstCell.match(/^(\d+)$/);
+            const secondCell = cells[1];
+
+            // Bắt STT từ cell 0 hoặc cell 1
+            const sttMatch =
+              firstCell.match(/^(?:Bài|STT|Tiết)?\s*(\d+)[.)\s:-]?$/i) ||
+              secondCell?.match(/^(?:Bài|STT|Tiết)?\s*(\d+)[.)\s:-]?$/i);
+
             if (sttMatch) {
               const stt = parseInt(sttMatch[1]);
-              const title = cells[1];
+              let title = firstCell.match(/^(?:Bài|STT|Tiết)?\s*\d+[.)\s:-]?$/i) ? cells[1] : cells[0];
+              if (!title || title.length < 2) title = cells[2] || cells[1] || `Bài học ${stt}`;
 
-              // Bỏ qua dòng tiêu đề bảng nếu cell 1 là "Tên bài" hoặc "Tên bài dạy"
+              // Bỏ qua dòng tiêu đề bảng
+              const lowerTitle = title.toLowerCase();
               if (
-                title.toLowerCase() === 'tên bài' ||
-                title.toLowerCase() === 'bài học' ||
-                title.toLowerCase() === 'tên bài học' ||
-                title.toLowerCase().includes('tên bài dạy') ||
-                title.toLowerCase().includes('nội dung bài dạy')
+                lowerTitle === 'tên bài' ||
+                lowerTitle === 'bài học' ||
+                lowerTitle === 'tên bài học' ||
+                lowerTitle.includes('tên bài dạy') ||
+                lowerTitle.includes('nội dung bài dạy') ||
+                lowerTitle.includes('tên chương') ||
+                lowerTitle.includes('chủ đề') ||
+                lowerTitle === 'stt'
               ) {
                 continue;
               }
@@ -185,12 +199,13 @@ export class CatalogExtractorService {
               let weekRange = '';
               const objectives: string[] = [];
 
-              for (let i = 2; i < cells.length; i++) {
+              for (let i = 1; i < cells.length; i++) {
                 const cell = cells[i];
-                const periodMatch = cell.match(/^(\d+)(?:\s*tiết)?$/i);
-                if (periodMatch && i === 2) {
+                if (cell === title) continue;
+
+                const periodMatch = cell.match(/(\d+)\s*tiết/i) || (i >= 2 && cell.match(/^(\d{1,2})$/));
+                if (periodMatch && periods === 2) {
                   periods = parseInt(periodMatch[1]) || 2;
-                  continue;
                 }
 
                 if (
@@ -198,9 +213,9 @@ export class CatalogExtractorService {
                   (!cell.toLowerCase().startsWith('tuần') && /\b\d+\s*[,-–]\s*\d+\b/.test(cell))
                 ) {
                   ppctRange = cell.startsWith('Tiết') ? cell : `Tiết ${cell}`;
-                } else if (cell.toLowerCase().startsWith('tuần') || (i === 4 && /^\d+$/.test(cell))) {
+                } else if (cell.toLowerCase().startsWith('tuần')) {
                   weekRange = cell.startsWith('Tuần') ? cell : `Tuần ${cell}`;
-                } else if (cell.length > 8 && objectives.length === 0) {
+                } else if (cell.length > 10 && objectives.length === 0) {
                   objectives.push(cell);
                 }
               }
@@ -219,7 +234,7 @@ export class CatalogExtractorService {
               }
 
               const subPrefix = this.getSubjectCodePrefix(detectedSubject || 'MH');
-              const cleanGradeNum = (detectedGrade || '9').replace(/[^0-9]/g, '') || '9';
+              const cleanGradeNum = (detectedGrade || '8').replace(/[^0-9]/g, '') || '8';
               const padStt = stt < 10 ? `0${stt}` : `${stt}`;
               const lessonCode = `${subPrefix}-${cleanGradeNum}-HKI-C01-STT${padStt}`;
 
@@ -232,38 +247,44 @@ export class CatalogExtractorService {
                 cleanTitle = `Bài ${stt}: ${cleanTitle}`;
               }
 
-              lessons.push({
-                stt,
-                lessonCode,
-                lessonTitle: cleanTitle,
-                chapter: currentChapter,
-                strand: currentStrand,
-                grade: detectedGrade || 'Lớp 9',
-                term: 'Học kỳ I',
-                totalPeriods: periods,
-                ppctRange,
-                weekRange,
-                keyObjectives: objectives.length > 0 ? objectives : [`Bám sát YCCĐ trong Phụ lục I (${doc.displayName})`],
-                sourceBasis: `${doc.documentType} (${doc.displayName})`,
-                matchedSources: [doc.documentType],
-              });
+              if (!lessons.some((l) => l.stt === stt)) {
+                lessons.push({
+                  stt,
+                  lessonCode,
+                  lessonTitle: cleanTitle,
+                  chapter: currentChapter,
+                  strand: currentStrand,
+                  grade: detectedGrade || 'Lớp 8',
+                  term: 'Học kỳ I',
+                  totalPeriods: periods,
+                  ppctRange,
+                  weekRange,
+                  keyObjectives: objectives.length > 0 ? objectives : [`Bám sát YCCĐ trong tệp nguồn (${doc.displayName})`],
+                  sourceBasis: `${doc.documentType} (${doc.displayName})`,
+                  matchedSources: [doc.documentType],
+                });
+              }
             }
           }
         } else {
-          // 2. Quét dòng văn bản danh sách có định dạng (Bài X: ... hoặc STT. ...)
-          const textLineMatch = line.match(/^(?:Bài\s*(\d+)[:.]|(\d+)[.)])\s+([^()\n]+?)(?:\s*\((\d+)\s*tiết\))?$/i);
+          // 2. Quét dòng văn bản danh sách có định dạng (Bài X: ..., Chủ đề X: ..., 1. ...)
+          const textLineMatch = line.match(/^(?:Bài\s*(\d+)|Chủ\s*đề\s*(\d+)|Phần\s*(\d+)|(\d+)[.)])\s*[:.–-]?\s*([^()\n]+?)(?:\s*[\(\[]?(\d+)\s*tiết[\)\]]?)?$/i);
           if (textLineMatch) {
-            const stt = parseInt(textLineMatch[1] || textLineMatch[2]);
-            const rawTitle = textLineMatch[3].trim();
-            const periods = parseInt(textLineMatch[4]) || 2;
+            const sttStr = textLineMatch[1] || textLineMatch[2] || textLineMatch[3] || textLineMatch[4];
+            const stt = parseInt(sttStr);
+            const rawTitle = textLineMatch[5].trim();
+            const periods = parseInt(textLineMatch[6]) || 2;
 
             if (rawTitle.length > 3 && !lessons.some((l) => l.stt === stt)) {
               const subPrefix = this.getSubjectCodePrefix(detectedSubject || 'MH');
-              const cleanGradeNum = (detectedGrade || '9').replace(/[^0-9]/g, '') || '9';
+              const cleanGradeNum = (detectedGrade || '8').replace(/[^0-9]/g, '') || '8';
               const padStt = stt < 10 ? `0${stt}` : `${stt}`;
               const lessonCode = `${subPrefix}-${cleanGradeNum}-HKI-C01-STT${padStt}`;
 
-              const cleanTitle = rawTitle.toLowerCase().startsWith('bài') ? rawTitle : `Bài ${stt}: ${rawTitle}`;
+              const cleanTitle = rawTitle.toLowerCase().startsWith('bài') || rawTitle.toLowerCase().startsWith('chủ đề')
+                ? rawTitle
+                : `Bài ${stt}: ${rawTitle}`;
+
               const endPpct = currentPpct + periods - 1;
               const ppctRange = periods === 1 ? `Tiết ${currentPpct}` : `Tiết ${currentPpct}, ${Array.from({ length: periods - 1 }, (_, k) => currentPpct + 1 + k).join(', ')}`;
               currentPpct = endPpct + 1;
@@ -274,16 +295,51 @@ export class CatalogExtractorService {
                 lessonTitle: cleanTitle,
                 chapter: currentChapter,
                 strand: currentStrand,
-                grade: detectedGrade || 'Lớp 9',
+                grade: detectedGrade || 'Lớp 8',
                 term: 'Học kỳ I',
                 totalPeriods: periods,
                 ppctRange,
                 weekRange: `Tuần ${Math.ceil(stt / 2)}`,
-                keyObjectives: [`Bám sát YCCĐ trong Phụ lục I (${doc.displayName})`],
+                keyObjectives: [`Bám sát YCCĐ trong tệp nguồn (${doc.displayName})`],
                 sourceBasis: `${doc.documentType} (${doc.displayName})`,
                 matchedSources: [doc.documentType],
               });
             }
+          }
+        }
+      }
+
+      // NẾU TỆP NGUỒN CÓ VĂN BẢN NHƯNG BỘ QUÉT BẢNG CHƯA BẮT ĐƯỢC HÀNG BÀI HỌC NÀO:
+      // Tự động giải phóng các dòng văn bản tiêu đề từ chính tệp đã tải lên
+      if (lessons.length === 0 && text.length > 50) {
+        const textLines = text.split('\n').map((l) => l.trim()).filter((l) => l.length > 5 && l.length < 150);
+        let fallbackStt = 1;
+        for (const l of textLines) {
+          if (
+            /^(bài|chương|chủ đề|phần|tiết|\d+[.)])/i.test(l) &&
+            !/^(bài học|bài dạy|môn học|kế hoạch)/i.test(l) &&
+            !lessons.some((existing) => existing.lessonTitle === l)
+          ) {
+            const subPrefix = this.getSubjectCodePrefix(detectedSubject || 'MH');
+            const cleanGradeNum = (detectedGrade || '8').replace(/[^0-9]/g, '') || '8';
+            const padStt = fallbackStt < 10 ? `0${fallbackStt}` : `${fallbackStt}`;
+            lessons.push({
+              stt: fallbackStt,
+              lessonCode: `${subPrefix}-${cleanGradeNum}-HKI-C01-STT${padStt}`,
+              lessonTitle: l.length < 80 ? l : l.slice(0, 80) + '...',
+              chapter: currentChapter,
+              strand: currentStrand,
+              grade: detectedGrade || 'Lớp 8',
+              term: 'Học kỳ I',
+              totalPeriods: 2,
+              ppctRange: `Tiết ${currentPpct}, ${currentPpct + 1}`,
+              weekRange: `Tuần ${Math.ceil(fallbackStt / 2)}`,
+              keyObjectives: [`Bám sát nội dung tệp nguồn (${doc.displayName})`],
+              sourceBasis: `${doc.documentType} (${doc.displayName})`,
+              matchedSources: [doc.documentType],
+            });
+            currentPpct += 2;
+            fallbackStt++;
           }
         }
       }
@@ -292,7 +348,7 @@ export class CatalogExtractorService {
     return {
       lessons,
       detectedSubject: detectedSubject || 'Tài liệu nguồn',
-      detectedGrade: detectedGrade || 'Lớp 9',
+      detectedGrade: detectedGrade || 'Lớp 8',
       detectedSchoolYear,
     };
   }
@@ -602,12 +658,67 @@ export class CatalogExtractorService {
       }
     }
 
-    // TRƯỜNG HỢP CHƯA CÓ BẢNG PPCT TỪ TỆP NGUỒN HOẶC CHƯA CÓ API KEY:
-    // Tự động kết nối Khung ma trận PPCT & Danh mục bài học chuẩn GDPT 2018 (35 tuần / 140 tiết)
-    const fallbackSubject = subjectName && subjectName !== 'Tài liệu nguồn' && subjectName !== 'Chưa xác định' ? subjectName : 'Toán';
-    const fallbackGrade = gradeName && gradeName !== 'Chưa xác định' ? gradeName : 'Lớp 8';
+    // NẾU CÓ TỆP NGUỒN TẢI LÊN NHƯNG CHƯA BÓC TÁCH ĐƯỢC BẢNG (HOẶC 🔑 0 KEYS):
+    // Tự động giải phóng danh mục từ chính tệp nguồn đã tải lên
+    if (activeDocs.length > 0) {
+      const docNames = activeDocs.map((d) => `[${d.documentType}] ${d.displayName}`);
+      const fallbackSubject = subjectName && subjectName !== 'Tài liệu nguồn' && subjectName !== 'Chưa xác định' ? subjectName : (detectedSubject || 'Tài liệu nguồn');
+      const fallbackGrade = gradeName && gradeName !== 'Chưa xác định' ? gradeName : (detectedGrade || 'Lớp 8');
 
-    const stdCatalog = this.generateStandardCatalog(fallbackSubject, fallbackGrade, targetProject, activeDocs);
+      // Tạo các bài học từ tên tệp và nội dung văn bản thực tế của người dùng
+      const docLessons: CatalogLessonItem[] = activeDocs.map((doc, idx) => {
+        const subPrefix = this.getSubjectCodePrefix(fallbackSubject);
+        const cleanGradeNum = (fallbackGrade || '8').replace(/[^0-9]/g, '') || '8';
+        const stt = idx + 1;
+        const padStt = stt < 10 ? `0${stt}` : `${stt}`;
+        return {
+          stt,
+          lessonCode: `${subPrefix}-${cleanGradeNum}-HKI-C01-STT${padStt}`,
+          lessonTitle: `Nội dung từ tệp ${doc.displayName}`,
+          chapter: 'Dữ liệu bóc tách từ tệp nguồn',
+          strand: fallbackSubject,
+          grade: fallbackGrade,
+          term: 'Học kỳ I',
+          totalPeriods: 2,
+          ppctRange: `Tiết ${idx * 2 + 1}, ${idx * 2 + 2}`,
+          weekRange: `Tuần ${Math.ceil((idx + 1) / 2)}`,
+          keyObjectives: [doc.contentSummary || `Theo nội dung tệp ${doc.displayName}`],
+          sourceBasis: `${doc.documentType} (${doc.displayName})`,
+          matchedSources: [doc.documentType],
+        };
+      });
+
+      const customCatalog: CurriculumCatalog = {
+        subject: fallbackSubject,
+        grade: fallbackGrade,
+        schoolYear: detectedSchoolYear,
+        sourceSummary: `Tự động kết nối dữ liệu tệp nguồn đã nạp: ${docNames.join(', ')}`,
+        totalLessons: docLessons.length,
+        totalPeriods: docLessons.reduce((a, b) => a + b.totalPeriods, 0),
+        sourcesUsed: {
+          hasPL1,
+          hasPPCT,
+          hasSGK,
+          hasKhdhOld,
+          hasOther,
+          docCount: activeDocs.length,
+          docNames,
+        },
+        extractedAt: new Date().toISOString(),
+        lessons: docLessons,
+      };
+
+      await this.saveCatalog(targetProject, customCatalog);
+      const markdown = this.renderCatalogToMarkdown(customCatalog);
+      return {
+        catalog: customCatalog,
+        markdownSummary: markdown,
+        isCached: false,
+      };
+    }
+
+    // CHỈ KHI CHƯA TẢI TỆP NGUỒN NÀO: Trả về Khung mẫu chuẩn GDPT 2018
+    const stdCatalog = this.generateStandardCatalog('Toán', 'Lớp 8', targetProject, []);
     const stdMarkdown = this.renderCatalogToMarkdown(stdCatalog);
 
     return {

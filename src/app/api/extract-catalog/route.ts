@@ -10,7 +10,8 @@ export async function GET(req: NextRequest) {
 
     let catalog = await CatalogExtractorService.getSavedCatalog(targetProject);
     if (!catalog) {
-      catalog = CatalogExtractorService.generateStandardCatalog('Toán', 'Lớp 8', targetProject, []);
+      const extracted = await CatalogExtractorService.extractCatalog({ projectId: targetProject });
+      catalog = extracted.catalog;
     }
 
     const markdownSummary = CatalogExtractorService.renderCatalogToMarkdown(catalog);
