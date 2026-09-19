@@ -228,7 +228,7 @@ export default function Home() {
       if (data.success && data.catalog) {
         setCatalogData(data.catalog);
         try {
-          localStorage.setItem('khdh_stored_catalog_v1', JSON.stringify(data.catalog));
+          localStorage.setItem(`khdh_catalog_${wsId}`, JSON.stringify(data.catalog));
         } catch {}
       }
     } catch (err) {
@@ -258,18 +258,37 @@ export default function Home() {
       setGoogleClientId(savedClientId);
     }
 
+    // NOTE: catalog is NOT loaded from localStorage here anymore.
+    // It will be loaded per-user after login in the currentUser effect below,
+    // using a user-specific key to prevent cross-user data leakage.
+  }, []);
+
+  // Fetch documents and state whenever user changes or on app load
+  useEffect(() => {
+    // 1. CLEAR ALL STATE from the previous user to prevent cross-user data leakage
+    setCatalogData(null);
+    setDocuments([]);
+    setReadiness(null);
+    setOutputData(null);
+    setTaskHistory([]);
+    setSelectedCatalogLessonCode('');
+
+    // 2. If logged out, nothing more to do
+    if (!currentUser?.email) return;
+
+    const wsId = getUserWorkspaceId(currentUser);
+
+    // 3. Load per-user catalog from localStorage using user-specific key
+    const userCatalogKey = `khdh_catalog_${wsId}`;
     try {
-      const savedCat = localStorage.getItem('khdh_stored_catalog_v1');
+      const savedCat = localStorage.getItem(userCatalogKey);
       if (savedCat) {
         const parsedCat = JSON.parse(savedCat);
         setCatalogData(parsedCat);
       }
     } catch {}
-  }, []);
 
-    // Fetch documents and state whenever user changes or on app load
-  useEffect(() => {
-    const wsId = getUserWorkspaceId(currentUser);
+    // 4. Load user's own documents, history, and catalog from server
     fetchDocuments(wsId);
     fetchTaskHistory(wsId);
     fetchSavedCatalog(wsId);
@@ -432,17 +451,18 @@ export default function Home() {
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' });
-      setCurrentUser(null);
-      setDocuments([]);
-      setReadiness(null);
-      ApiKeyService.clearClientKeys();
-      setConfiguredKeyCount(0);
-      setOutputData(null);
-    } catch {
-      setCurrentUser(null);
-      setDocuments([]);
-      setReadiness(null);
-    }
+    } catch {}
+    // Clear ALL user-specific state completely
+    setCurrentUser(null);
+    setDocuments([]);
+    setReadiness(null);
+    setCatalogData(null);
+    setOutputData(null);
+    setTaskHistory([]);
+    setSelectedCatalogLessonCode('');
+    ApiKeyService.clearClientKeys();
+    setConfiguredKeyCount(0);
+    setRawKeysInput('');
   };
 
   const currentParsedKeys = ApiKeyService.parseKeys(rawKeysInput);
@@ -892,14 +912,16 @@ export default function Home() {
     if (catalogData && catalogData.grade !== newGrade) {
       setCatalogData(null);
       try {
-        localStorage.removeItem('khdh_stored_catalog_v1');
+        const wsId = getUserWorkspaceId(currentUser);
+        localStorage.removeItem(`khdh_catalog_${wsId}`);
       } catch {}
     }
     handleExtractCatalogServerSide(true, newGrade, selectedSubject);
   };
 
   const handleResetCatalogCache = () => {
-    localStorage.removeItem('khdh_stored_catalog_v1');
+    const wsId = getUserWorkspaceId(currentUser);
+    localStorage.removeItem(`khdh_catalog_${wsId}`);
     setCatalogData(null);
     handleExtractCatalogServerSide(true, selectedGrade);
   };
@@ -908,7 +930,8 @@ export default function Home() {
     setSelectedSubject(newSubject);
     setCatalogData(null);
     try {
-      localStorage.removeItem('khdh_stored_catalog_v1');
+      const wsId = getUserWorkspaceId(currentUser);
+      localStorage.removeItem(`khdh_catalog_${wsId}`);
     } catch {}
     handleExtractCatalogServerSide(true, selectedGrade, newSubject);
   };
@@ -917,7 +940,7 @@ export default function Home() {
     if (!confirm('Thầy/Cô có chắc chắn muốn XÓA SẠCH toàn bộ dữ liệu cũ, bộ nhớ đệm và đặt lại hệ thống từ đầu không?')) return;
     try {
       const wsId = getUserWorkspaceId(currentUser);
-      localStorage.removeItem('khdh_stored_catalog_v1');
+      localStorage.removeItem(`khdh_catalog_${wsId}`);
       setCatalogData(null);
       setOutputData(null);
       setDocuments([]);
@@ -969,7 +992,8 @@ export default function Home() {
 
       setCatalogData(data.catalog);
       try {
-        localStorage.setItem('khdh_stored_catalog_v1', JSON.stringify(data.catalog));
+        const wsId = getUserWorkspaceId(currentUser);
+        localStorage.setItem(`khdh_catalog_${wsId}`, JSON.stringify(data.catalog));
       } catch {}
       setShowCatalogModal(true);
     } catch (err: unknown) {
@@ -1021,7 +1045,8 @@ export default function Home() {
 
       setCatalogData(data.catalog);
       try {
-        localStorage.setItem('khdh_stored_catalog_v1', JSON.stringify(data.catalog));
+        const wsId = getUserWorkspaceId(currentUser);
+        localStorage.setItem(`khdh_catalog_${wsId}`, JSON.stringify(data.catalog));
       } catch {}
       setShowCatalogModal(true);
     } catch (err: unknown) {
@@ -1035,7 +1060,8 @@ export default function Home() {
   const handleSaveCatalog = () => {
     if (!catalogData) return;
     try {
-      localStorage.setItem('khdh_stored_catalog_v1', JSON.stringify(catalogData));
+      const wsId = getUserWorkspaceId(currentUser);
+      localStorage.setItem(`khdh_catalog_${wsId}`, JSON.stringify(catalogData));
       setSavedCatalogSuccess(true);
       setTimeout(() => setSavedCatalogSuccess(false), 3000);
     } catch (e) {

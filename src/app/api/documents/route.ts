@@ -8,8 +8,9 @@ import { resolveUserProjectIdFromRequest } from '@/lib/user-workspace';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const projectId = await resolveUserProjectIdFromRequest(request, searchParams.get('projectId'));
+    // SECURITY: Always resolve project ID from the authenticated JWT session cookie.
+    // Never trust the client-supplied projectId parameter to prevent cross-user data access.
+    const projectId = await resolveUserProjectIdFromRequest(request);
     const documents = await SourceDocumentService.getAll(projectId);
     const readiness = await SourceDocumentService.getReadiness(projectId);
 
@@ -31,8 +32,8 @@ export async function POST(request: NextRequest) {
     const files = formData.getAll('files') as File[];
     const singleFile = formData.get('file') as File | null;
     const preferredType = formData.get('documentType') as SourceDocumentType | undefined;
-    const clientProjectId = formData.get('projectId') as string | null;
-    const projectId = await resolveUserProjectIdFromRequest(request, clientProjectId);
+    // SECURITY: Always resolve project ID from the authenticated JWT session cookie.
+    const projectId = await resolveUserProjectIdFromRequest(request);
 
     const allFiles: File[] = [];
     if (singleFile) allFiles.push(singleFile);

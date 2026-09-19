@@ -5,9 +5,8 @@ import { resolveUserProjectIdFromRequest } from '@/lib/user-workspace';
 
 export async function GET(req: NextRequest) {
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const clientProjectId = searchParams.get('projectId') || undefined;
-    const targetProject = await resolveUserProjectIdFromRequest(req, clientProjectId);
+    // SECURITY: Always resolve from JWT session
+    const targetProject = await resolveUserProjectIdFromRequest(req);
 
     let catalog = await CatalogExtractorService.getSavedCatalog(targetProject);
     if (!catalog) {
@@ -35,7 +34,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body: ExtractCatalogRequest = await req.json().catch(() => ({}));
-    const targetProject = await resolveUserProjectIdFromRequest(req, body.projectId);
+    // SECURITY: Always resolve from JWT session, ignore client-provided projectId
+    const targetProject = await resolveUserProjectIdFromRequest(req);
 
     const { catalog, markdownSummary, keyUsed, isCached } = await CatalogExtractorService.extractCatalog({
       ...body,
@@ -64,9 +64,8 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const searchParams = req.nextUrl.searchParams;
-    const clientProjectId = searchParams.get('projectId') || undefined;
-    const targetProject = await resolveUserProjectIdFromRequest(req, clientProjectId);
+    // SECURITY: Always resolve from JWT session
+    const targetProject = await resolveUserProjectIdFromRequest(req);
 
     await CatalogExtractorService.clearCatalog(targetProject);
 

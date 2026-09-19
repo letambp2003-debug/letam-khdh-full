@@ -6,11 +6,11 @@ import { SaveTaskHistoryRequest } from '@/types/task-history.types';
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const clientProjectId = searchParams.get('projectId');
     const query = searchParams.get('q') || undefined;
     const typeFilter = searchParams.get('type') || undefined;
 
-    const projectId = await resolveUserProjectIdFromRequest(req, clientProjectId);
+    // SECURITY: Always resolve from JWT session
+    const projectId = await resolveUserProjectIdFromRequest(req);
     const tasks = await TaskHistoryService.getTasksByProject(projectId, query, typeFilter);
 
     return NextResponse.json({
@@ -36,7 +36,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const projectId = await resolveUserProjectIdFromRequest(req, body.projectId);
+    // SECURITY: Always resolve from JWT session
+    const projectId = await resolveUserProjectIdFromRequest(req);
     const saved = await TaskHistoryService.recordTask(body, projectId);
 
     return NextResponse.json({
@@ -56,9 +57,9 @@ export async function DELETE(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const taskId = searchParams.get('id');
     const clearAll = searchParams.get('clearAll') === 'true';
-    const clientProjectId = searchParams.get('projectId');
 
-    const projectId = await resolveUserProjectIdFromRequest(req, clientProjectId);
+    // SECURITY: Always resolve from JWT session
+    const projectId = await resolveUserProjectIdFromRequest(req);
 
     if (clearAll) {
       await TaskHistoryService.clearAllTasks(projectId);
