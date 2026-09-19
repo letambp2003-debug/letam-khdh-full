@@ -913,14 +913,11 @@ export default function Home() {
     const subPrefix = selectedSubject.includes('Sử') ? 'SU' : selectedSubject.includes('Văn') ? 'VAN' : selectedSubject.includes('KHTN') ? 'KHTN' : selectedSubject.includes('Tin') ? 'TIN' : selectedSubject.includes('Địa') ? 'DIA' : selectedSubject.includes('Anh') ? 'ENG' : 'TOAN';
     setLessonCode(`${subPrefix}-${num}-HKI-C01-STT01`);
     setSelectedCatalogLessonCode('');
-    // Clear old catalog cache for switch if different grade
-    if (catalogData && catalogData.grade !== newGrade) {
-      setCatalogData(null);
-      try {
-        const wsId = getUserWorkspaceId(currentUser);
-        localStorage.removeItem(`khdh_catalog_${wsId}`);
-      } catch {}
-    }
+    setCatalogData(null);
+    try {
+      const wsId = getUserWorkspaceId(currentUser);
+      localStorage.removeItem(`khdh_catalog_${wsId}`);
+    } catch {}
     handleExtractCatalogServerSide(true, newGrade, selectedSubject);
   };
 
@@ -928,11 +925,15 @@ export default function Home() {
     const wsId = getUserWorkspaceId(currentUser);
     localStorage.removeItem(`khdh_catalog_${wsId}`);
     setCatalogData(null);
-    handleExtractCatalogServerSide(true, selectedGrade);
+    handleExtractCatalogServerSide(true, selectedGrade, selectedSubject);
   };
 
   const handleSwitchSubject = (newSubject: string) => {
     setSelectedSubject(newSubject);
+    const num = selectedGrade.replace(/[^0-9]/g, '');
+    const subPrefix = newSubject.includes('Sử') ? 'SU' : newSubject.includes('Văn') ? 'VAN' : newSubject.includes('KHTN') ? 'KHTN' : newSubject.includes('Tin') ? 'TIN' : newSubject.includes('Địa') ? 'DIA' : newSubject.includes('Anh') ? 'ENG' : 'TOAN';
+    setLessonCode(`${subPrefix}-${num}-HKI-C01-STT01`);
+    setSelectedCatalogLessonCode('');
     setCatalogData(null);
     try {
       const wsId = getUserWorkspaceId(currentUser);
@@ -996,10 +997,16 @@ export default function Home() {
       }
 
       setCatalogData(data.catalog);
-      if (data.catalog?.subject && data.catalog.subject !== 'Tài liệu nguồn' && data.catalog.subject !== 'Chưa xác định') {
+
+      if (overrideSubject) {
+        setSelectedSubject(overrideSubject);
+      } else if (data.catalog?.subject && data.catalog.subject !== 'Tài liệu nguồn' && data.catalog.subject !== 'Chưa xác định') {
         setSelectedSubject(data.catalog.subject);
       }
-      if (data.catalog?.grade && ['Lớp 9', 'Lớp 8', 'Lớp 7', 'Lớp 6'].includes(data.catalog.grade)) {
+
+      if (overrideGrade) {
+        setSelectedGrade(overrideGrade);
+      } else if (data.catalog?.grade && ['Lớp 9', 'Lớp 8', 'Lớp 7', 'Lớp 6'].includes(data.catalog.grade)) {
         setSelectedGrade(data.catalog.grade as 'Lớp 9' | 'Lớp 8' | 'Lớp 7' | 'Lớp 6');
       }
       try {

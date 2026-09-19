@@ -796,8 +796,8 @@ export class CatalogExtractorService {
       };
     }
 
-    // CHỈ KHI CHƯA TẢI TỆP NGUỒN NÀO: Trả về Khung mẫu chuẩn GDPT 2018
-    const stdCatalog = this.generateStandardCatalog('Toán', 'Lớp 8', targetProject, []);
+    // CHỈ KHI CHƯA TẢI TỆP NGUỒN NÀO: Trả về Khung mẫu chuẩn GDPT 2018 theo đúng môn và lớp được chọn
+    const stdCatalog = this.generateStandardCatalog(subjectName, gradeName, targetProject, []);
     const stdMarkdown = this.renderCatalogToMarkdown(stdCatalog);
 
     return {
