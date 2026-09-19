@@ -1,0 +1,13 @@
+{
+  "id": "VisualAssetAgent",
+  "version": "10.1",
+  "system": "KHDH AUTO V10.1 FINAL",
+  "skill_file": "skill.md",
+  "next_agents": [
+    "QAAgent",
+    "PeriodPlannerAgent"
+  ],
+  "orchestrated": true,
+  "direct_agent_to_agent_calls": false,
+  "language": "vi"
+}

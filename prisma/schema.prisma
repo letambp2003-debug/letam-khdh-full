@@ -1,0 +1,52 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Job {
+  id             String    @id @default(cuid())
+  job_id         String    @unique
+  command        String
+  command_args   String?
+  lesson_id      String?
+  current_agent  String?
+  phase          Int       @default(0)
+  status         String    @default("PENDING")
+  locks          String    @default("[]")
+  warnings       String    @default("[]")
+  errors         String    @default("[]")
+  artifacts      String    @default("{}")
+  token_input    Int       @default(0)
+  token_output   Int       @default(0)
+  token_by_agent String    @default("{}")
+  created_at     DateTime  @default(now())
+  updated_at     DateTime  @updatedAt
+  completed_at   DateTime?
+  logs           JobLog[]
+}
+
+model JobLog {
+  id         Int      @id @default(autoincrement())
+  job_id     String
+  agent_id   String?
+  level      String
+  message    String
+  data       String?
+  created_at DateTime @default(now())
+  job        Job      @relation(fields: [job_id], references: [job_id])
+}
+
+model Source {
+  id           String   @id @default(cuid())
+  job_id       String
+  type         String
+  filename     String
+  file_path    String
+  parsed_index String?
+  status       String
+  created_at   DateTime @default(now())
+}

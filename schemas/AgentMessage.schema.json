@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentMessageV10_1",
+  "type": "object",
+  "required": [
+    "job_id",
+    "sender",
+    "receiver",
+    "status",
+    "payload",
+    "warnings",
+    "errors"
+  ],
+  "properties": {
+    "job_id": {
+      "type": "string"
+    },
+    "lesson_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "sender": {
+      "type": "string"
+    },
+    "receiver": {
+      "type": "string"
+    },
+    "status": {
+      "enum": [
+        "OK",
+        "WARNING",
+        "CONFLICT",
+        "BLOCKED",
+        "FAIL"
+      ]
+    },
+    "payload": {
+      "type": "object"
+    },
+    "warnings": {
+      "type": "array"
+    },
+    "errors": {
+      "type": "array"
+    },
+    "next_action": {
+      "type": "string"
+    }
+  }
+}

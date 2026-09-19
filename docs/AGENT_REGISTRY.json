@@ -1,0 +1,127 @@
+{
+  "system": "KHDH AUTO V10.1 FINAL",
+  "agents": [
+    {
+      "id": "SourceIndexerAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [
+        "LessonRouterAgent"
+      ],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    },
+    {
+      "id": "LessonRouterAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [
+        "OldKhdhMatcherAgent"
+      ],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    },
+    {
+      "id": "OldKhdhMatcherAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [
+        "KhdhBuilderAgent"
+      ],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    },
+    {
+      "id": "KhdhBuilderAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [
+        "MathAgent",
+        "VisualAssetAgent"
+      ],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    },
+    {
+      "id": "MathAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [
+        "QAAgent",
+        "PeriodPlannerAgent"
+      ],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    },
+    {
+      "id": "VisualAssetAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [
+        "QAAgent",
+        "PeriodPlannerAgent"
+      ],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    },
+    {
+      "id": "PeriodPlannerAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [
+        "SlideAgent"
+      ],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    },
+    {
+      "id": "SlideAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [
+        "CanvaNotebookAgent",
+        "QAAgent"
+      ],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    },
+    {
+      "id": "CanvaNotebookAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [
+        "QAAgent"
+      ],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    },
+    {
+      "id": "QAAgent",
+      "version": "10.1",
+      "system": "KHDH AUTO V10.1 FINAL",
+      "skill_file": "skill.md",
+      "next_agents": [],
+      "orchestrated": true,
+      "direct_agent_to_agent_calls": false,
+      "language": "vi"
+    }
+  ]
+}

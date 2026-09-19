@@ -1,0 +1,40 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "AgentErrorV10_1",
+  "type": "object",
+  "required": [
+    "code",
+    "type",
+    "location",
+    "owner_agent",
+    "action",
+    "severity"
+  ],
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string"
+    },
+    "location": {
+      "type": "string"
+    },
+    "owner_agent": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    },
+    "severity": {
+      "enum": [
+        "INFO",
+        "WARNING",
+        "BLOCKING"
+      ]
+    },
+    "message": {
+      "type": "string"
+    }
+  }
+}
